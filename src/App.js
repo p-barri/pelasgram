@@ -10,19 +10,28 @@ class App extends Component {
         //super es constructor de Component. Como parent en php.
         super();
         this.state = {
-            user: null
+            user: null,
+            pictures: [],
+            uploadValue: 0
         };
 
         this.handleAuth = this.handleAuth.bind(this);
         this.handleLogout = this.handleLogout.bind(this);
         this.renderLoginButton = this.renderLoginButton.bind(this);
+        this.handleUpload = this.handleUpload.bind(this);
     }
 
     //de ciclo de vida. Se llama cuando el componente se renderizo.
     componentWillMount () {
         firebase.auth().onAuthStateChanged(user => {
             this.setState({ user });
-        })
+        });
+
+        firebase.database().ref('pictures').on('child_added', snapshot => {
+            this.setState({
+               pictures: this.state.pictures.concat(snapshot.val())
+            });
+        });
     }
 
     handleAuth () {
@@ -46,7 +55,19 @@ class App extends Component {
                     <img width={100} src={this.state.user.photoURL} alt={this.state.user.displayName} />
                     <p>Hola {this.state.user.displayName}!</p>
                     <button onClick={ this.handleLogout }>Logout</button>
-                    <FileUpload />
+                    <FileUpload onUpload={this.handleUpload} uploadValue={this.state.uploadValue}/>
+
+                    {
+                        this.state.pictures.map(picture => (
+                            <div>
+                                <img src={picture.image} alt=""/>
+                                <br/>
+                                <img src={picture.photoURL} alt={picture.displayName}/>
+                                <br/>
+                                <span>{picture.displayName}</span>
+                            </div>
+                        )).reverse()
+                    }
                 </div>
             );
         } else {
@@ -55,6 +76,35 @@ class App extends Component {
             );
         }
 
+    }
+
+    handleUpload (event) {
+        const file = event.target.files[0];
+        const storageRef = firebase.storage().ref(`/fotos/${file.name}`);
+        const task = storageRef.put(file);
+
+        task.on('state_changed', snapshot => {
+            console.log('Inicio carga');
+            let percetange = ( snapshot.bytesTransferred / snapshot.totalBytes ) * 100;
+
+            this.setState({
+                uploadValue: percetange
+            });
+        }, error => {
+            console.log(error.message);
+        }, () => {
+            console.log('Termino carga');
+            const record = {
+                photoURL: this.state.user.photoURL,
+                displayName: this.state.user.displayName,
+                image: task.snapshot.downloadURL
+            };
+
+            const dbRef = firebase.database().ref('pictures');
+            const newPicture = dbRef.push();
+
+            newPicture.set(record);
+        })
     }
 
   render() {
