@@ -54,17 +54,19 @@ class App extends Component {
                 <div>
                     <img width={100} src={this.state.user.photoURL} alt={this.state.user.displayName} />
                     <p>Hola {this.state.user.displayName}!</p>
-                    <button onClick={ this.handleLogout }>Logout</button>
+                    <button onClick={ this.handleLogout } className="App-btn">Salir</button>
                     <FileUpload onUpload={this.handleUpload} uploadValue={this.state.uploadValue}/>
 
                     {
                         this.state.pictures.map(picture => (
-                            <div>
-                                <img src={picture.image} alt=""/>
-                                <br/>
-                                <img src={picture.photoURL} alt={picture.displayName}/>
-                                <br/>
-                                <span>{picture.displayName}</span>
+                            <div className="App-card">
+                                <figure className="App-card-image">
+                                    <img width="320" src={picture.image} />
+                                    <figCaption className="App-card-footer">
+                                        <img className="App-card-avatar" src={picture.photoURL} alt={picture.displayName} />
+                                        <span className="App-card-name">{picture.displayName}</span>
+                                    </figCaption>
+                                </figure>
                             </div>
                         )).reverse()
                     }
@@ -72,7 +74,7 @@ class App extends Component {
             );
         } else {
             return(
-                <button onClick={this.handleAuth}>Login con Google</button>
+                <button onClick={this.handleAuth} className="App-btn">Login con Google</button>
             );
         }
 
@@ -112,7 +114,7 @@ class App extends Component {
       <div className="App">
         <div className="App-header">
           <img src={logo} className="App-logo" alt="logo" />
-          <h2>Welcome to pelasgram</h2>
+          <h2>¡Bienvenido a pelasgram!</h2>
         </div>
         <div className="App-intro">
             { this.renderLoginButton() }
